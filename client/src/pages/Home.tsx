@@ -33,8 +33,9 @@ export default function Home() {
       {/* HERO */}
       <section className="relative overflow-hidden bg-navy">
         <div className="absolute inset-0">
-          <img src={HERO_IMAGE} alt="" className="h-full w-full object-cover opacity-40" />
-          <div className="absolute inset-0 bg-gradient-to-br from-navy via-navy/95 to-navy/60" />
+          <img src={HERO_IMAGE} alt="" className="h-full w-full object-cover opacity-90" />
+          <div className="absolute inset-0 bg-gradient-to-r from-navy via-navy/85 to-navy/20" />
+          <div className="absolute inset-0 bg-gradient-to-t from-navy/70 via-transparent to-navy/30" />
         </div>
 
         <div className="container relative grid gap-10 py-20 lg:grid-cols-12 lg:py-28">

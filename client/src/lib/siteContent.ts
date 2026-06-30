@@ -1,7 +1,7 @@
 // Static site content & brand constants used across pages.
 
 export const LOGO_URL = "/manus-storage/prime_logo_a8c45322.png";
-export const HERO_IMAGE = "/manus-storage/hero_industrial_maritime_8029b615.jpg";
+export const HERO_IMAGE = "/manus-storage/hero_option1_tank_lining_7795ebb8.jpg";
 export const DISTRIBUTOR_BADGE = "/manus-storage/distributor_badge_b9f0e393.png";
 
 export const CTA_INDUSTRY_IMG = "/manus-storage/cta_industry_3e0c5ede.jpg";
