@@ -30,6 +30,8 @@ import {
   LogOut,
   Pencil,
   Plus,
+  RotateCcw,
+  Save,
   ShieldAlert,
   Trash2,
 } from "lucide-react";
@@ -129,6 +131,7 @@ function AdminDashboard({ onLogout, userName }: { onLogout: () => void; userName
           <TabsList>
             <TabsTrigger value="products">Products</TabsTrigger>
             <TabsTrigger value="applications">Applications</TabsTrigger>
+            <TabsTrigger value="content">Page Content</TabsTrigger>
             <TabsTrigger value="inquiries">Inquiries</TabsTrigger>
           </TabsList>
           <TabsContent value="products" className="mt-6">
@@ -136,6 +139,9 @@ function AdminDashboard({ onLogout, userName }: { onLogout: () => void; userName
           </TabsContent>
           <TabsContent value="applications" className="mt-6">
             <ApplicationsAdmin />
+          </TabsContent>
+          <TabsContent value="content" className="mt-6">
+            <SiteContentAdmin />
           </TabsContent>
           <TabsContent value="inquiries" className="mt-6">
             <InquiriesAdmin />
@@ -567,6 +573,131 @@ function InquiriesAdmin() {
           </p>
         </div>
       ))}
+    </div>
+  );
+}
+
+/* ----------------------------- Site Content ----------------------------- */
+
+function SiteContentAdmin() {
+  const utils = trpc.useUtils();
+  const listQuery = trpc.siteContent.listAll.useQuery();
+  const rows = listQuery.data ?? [];
+
+  if (listQuery.isLoading) return <LoadingRows />;
+  if (rows.length === 0) return <EmptyAdmin message="No editable content found." />;
+
+  // Group rows by their page/group for a tidy editor.
+  const groups = rows.reduce<Record<string, typeof rows>>((acc, r) => {
+    (acc[r.groupName] ??= []).push(r);
+    return acc;
+  }, {});
+
+  return (
+    <div>
+      <div className="mb-5">
+        <h2 className="font-display text-xl font-bold uppercase tracking-wide text-navy">Page Content</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Edit the fixed text shown on your public pages, in English and Greek. Changes go live
+          immediately after you save. Leave a field unchanged to keep the current text.
+        </p>
+      </div>
+      <div className="space-y-8">
+        {Object.entries(groups).map(([group, items]) => (
+          <div key={group}>
+            <h3 className="mb-3 border-b pb-2 font-display text-lg font-bold uppercase tracking-wide text-navy">
+              {group}
+            </h3>
+            <div className="space-y-3">
+              {items.map((row) => (
+                <ContentField
+                  key={row.id}
+                  row={row}
+                  onSaved={() => {
+                    utils.siteContent.listAll.invalidate();
+                    utils.siteContent.list.invalidate();
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ContentField({
+  row,
+  onSaved,
+}: {
+  row: { contentKey: string; label: string; valueEn: string | null; valueEl: string | null; multiline: boolean };
+  onSaved: () => void;
+}) {
+  const [en, setEn] = useState(row.valueEn ?? "");
+  const [el, setEl] = useState(row.valueEl ?? "");
+
+  const dirty = en !== (row.valueEn ?? "") || el !== (row.valueEl ?? "");
+
+  const updateM = trpc.siteContent.update.useMutation({
+    onSuccess: () => {
+      toast.success(`Saved: ${row.label}`);
+      onSaved();
+    },
+    onError: () => toast.error("Could not save. Please try again."),
+  });
+  const resetM = trpc.siteContent.reset.useMutation({
+    onSuccess: () => {
+      toast.success(`Reset to default: ${row.label}`);
+      onSaved();
+    },
+    onError: () => toast.error("Could not reset."),
+  });
+
+  const Field = row.multiline ? Textarea : Input;
+
+  return (
+    <div className="rounded-lg border bg-card p-4 shadow-sm">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <Label className="text-sm font-semibold text-navy">{row.label}</Label>
+        <div className="flex gap-1.5">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-muted-foreground"
+            disabled={resetM.isPending}
+            onClick={() => {
+              if (confirm(`Reset "${row.label}" back to the original text?`)) resetM.mutate({ contentKey: row.contentKey });
+            }}
+            aria-label="Reset to default"
+          >
+            <RotateCcw className="mr-1.5 h-3.5 w-3.5" /> Reset
+          </Button>
+          <Button
+            size="sm"
+            className="bg-orange-brand text-orange-brand-foreground hover:bg-orange-brand/90"
+            disabled={!dirty || updateM.isPending}
+            onClick={() => updateM.mutate({ contentKey: row.contentKey, valueEn: en, valueEl: el })}
+          >
+            {updateM.isPending ? (
+              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Save className="mr-1.5 h-3.5 w-3.5" />
+            )}
+            Save
+          </Button>
+        </div>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-1">
+          <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">English</span>
+          <Field value={en} onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setEn(e.target.value)} rows={row.multiline ? 3 : undefined} />
+        </div>
+        <div className="space-y-1">
+          <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Ελληνικά</span>
+          <Field value={el} onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setEl(e.target.value)} rows={row.multiline ? 3 : undefined} />
+        </div>
+      </div>
     </div>
   );
 }

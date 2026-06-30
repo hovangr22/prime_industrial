@@ -14,10 +14,13 @@ import {
   listApplications,
   listInquiries,
   listProducts,
+  listSiteContent,
   setInquiryHandled,
   updateApplication,
   updateProduct,
+  upsertSiteContent,
 } from "./db";
+import { SITE_CONTENT_FIELDS, ensureSiteContentSeeded } from "./siteContentSeed";
 
 const productInput = z.object({
   category: z.string().min(1).max(64),
@@ -159,6 +162,44 @@ export const appRouter = router({
     setHandled: adminProcedure
       .input(z.object({ id: z.number().int(), handled: z.boolean() }))
       .mutation(({ input }) => setInquiryHandled(input.id, input.handled)),
+  }),
+
+  /* ---------------------------- Site Content ------------------------------ */
+  siteContent: router({
+    // Public: returns the editable copy as a { key: { en, el } } map for the frontend.
+    list: publicProcedure.query(async () => {
+      await ensureSiteContentSeeded();
+      const rows = await listSiteContent();
+      const map: Record<string, { en: string | null; el: string | null }> = {};
+      for (const r of rows) map[r.contentKey] = { en: r.valueEn, el: r.valueEl };
+      return map;
+    }),
+    // Admin: full rows (incl. labels/groups) for the editor.
+    listAll: adminProcedure.query(async () => {
+      await ensureSiteContentSeeded();
+      return listSiteContent();
+    }),
+    update: adminProcedure
+      .input(
+        z.object({
+          contentKey: z.string().min(1).max(191),
+          valueEn: z.string().max(8000).optional().nullable(),
+          valueEl: z.string().max(8000).optional().nullable(),
+        }),
+      )
+      .mutation(({ input }) => upsertSiteContent(input)),
+    // Admin: reset a single field back to its default seed value.
+    reset: adminProcedure
+      .input(z.object({ contentKey: z.string().min(1).max(191) }))
+      .mutation(({ input }) => {
+        const def = SITE_CONTENT_FIELDS.find((f) => f.contentKey === input.contentKey);
+        if (!def) return;
+        return upsertSiteContent({
+          contentKey: input.contentKey,
+          valueEn: def.valueEn,
+          valueEl: def.valueEl,
+        });
+      }),
   }),
 });
 

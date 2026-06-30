@@ -6,7 +6,9 @@ import {
   InsertApplication,
   InsertInquiry,
   InsertProduct,
+  InsertSiteContent,
   products,
+  siteContent,
   users,
   type InsertUser,
 } from "../drizzle/schema";
@@ -190,4 +192,44 @@ export async function setInquiryHandled(id: number, handled: boolean) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.update(inquiries).set({ handled }).where(eq(inquiries.id, id));
+}
+
+/* --------------------------- Site Content --------------------------- */
+
+export async function listSiteContent() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(siteContent).orderBy(asc(siteContent.sortOrder), asc(siteContent.id));
+}
+
+export async function upsertSiteContent(
+  row: Pick<InsertSiteContent, "contentKey" | "valueEn" | "valueEl">,
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db
+    .update(siteContent)
+    .set({ valueEn: row.valueEn ?? null, valueEl: row.valueEl ?? null })
+    .where(eq(siteContent.contentKey, row.contentKey));
+}
+
+/**
+ * Insert a content field definition if it does not already exist.
+ * Used to seed the editable fields without overwriting owner edits.
+ */
+export async function seedSiteContent(row: InsertSiteContent) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db
+    .insert(siteContent)
+    .values(row)
+    .onDuplicateKeyUpdate({
+      set: {
+        // Keep definition metadata in sync, but never overwrite owner-edited values.
+        groupName: row.groupName,
+        label: row.label,
+        multiline: row.multiline ?? false,
+        sortOrder: row.sortOrder ?? 0,
+      },
+    });
 }

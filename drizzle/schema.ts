@@ -92,3 +92,28 @@ export const inquiries = mysqlTable("inquiries", {
 
 export type Inquiry = typeof inquiries.$inferSelect;
 export type InsertInquiry = typeof inquiries.$inferInsert;
+
+/**
+ * Owner-editable site content. Each row is a single editable text field,
+ * identified by a stable `key`, with English and Greek values.
+ * Pages read these (with a code-side fallback) so the owner can edit copy
+ * from the admin panel without code changes.
+ */
+export const siteContent = mysqlTable("site_content", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Stable identifier, e.g. "services.support24.title". */
+  contentKey: varchar("contentKey", { length: 191 }).notNull().unique(),
+  /** Grouping for the admin UI, e.g. "Services", "About". */
+  groupName: varchar("groupName", { length: 64 }).notNull(),
+  /** Human-readable label shown in the admin editor. */
+  label: varchar("label", { length: 191 }).notNull(),
+  valueEn: text("valueEn"),
+  valueEl: text("valueEl"),
+  /** Whether the editor should render a multi-line textarea. */
+  multiline: boolean("multiline").default(false).notNull(),
+  sortOrder: int("sortOrder").default(0).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SiteContent = typeof siteContent.$inferSelect;
+export type InsertSiteContent = typeof siteContent.$inferInsert;

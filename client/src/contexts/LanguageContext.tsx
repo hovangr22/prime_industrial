@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { trpc } from "@/lib/trpc";
 
 export type Lang = "en" | "el";
 
@@ -208,13 +209,25 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const setLang = useCallback((l: Lang) => setLangState(l), []);
   const toggleLang = useCallback(() => setLangState((p) => (p === "en" ? "el" : "en")), []);
 
+  // Owner-editable copy overrides (managed from the admin "Site Content" tab).
+  // Falls back silently to the built-in dictionary when unavailable or unedited.
+  const { data: overrides } = trpc.siteContent.list.useQuery(undefined, {
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+  });
+
   const t = useCallback(
     (key: string) => {
+      const override = overrides?.[key];
+      if (override) {
+        const val = lang === "el" ? override.el ?? override.en : override.en ?? override.el;
+        if (val != null && val !== "") return val;
+      }
       const entry = DICT[key];
       if (!entry) return key;
       return entry[lang] ?? entry.en;
     },
-    [lang],
+    [lang, overrides],
   );
 
   const pick = useCallback(
@@ -225,7 +238,10 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     [lang],
   );
 
-  const value = useMemo(() => ({ lang, setLang, toggleLang, t, pick }), [lang, setLang, toggleLang, t, pick]);
+  const value = useMemo(
+    () => ({ lang, setLang, toggleLang, t, pick }),
+    [lang, setLang, toggleLang, t, pick],
+  );
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }

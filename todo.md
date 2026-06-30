@@ -46,3 +46,12 @@
 - [x] Vitest tests for routers (public + admin gating + inquiry)
 - [x] Visual review (desktop pages)
 - [x] Checkpoint + deliver
+
+## Owner-editable Site Content (added)
+- [x] Add `site_content` table (key, valueEn, valueEl, group, label, multiline) to schema and migrate
+- [x] Backend: public `siteContent.list` query + admin `siteContent.upsert`/`reset` mutation
+- [x] Seed editable Services strings (and Home/About key texts) into site_content
+- [x] Admin panel: new "Page Content" tab with EN/EL editable fields grouped by page
+- [x] Frontend: load DB content with dictionary fallback via t() override, keep i18n working
+- [x] Vitest: cover siteContent admin-only update/reset + public list (11/11 passing)
+- [x] Verify owner-only gate + checkpoint + deliver
