@@ -76,6 +76,12 @@ const DICT: Dict = {
   },
   "products.filter.all": { en: "All Products", el: "Όλα τα Προϊόντα" },
   "products.empty": { en: "No products in this category yet.", el: "Δεν υπάρχουν ακόμη προϊόντα σε αυτή την κατηγορία." },
+  "products.viewDetails": { en: "View details", el: "Δείτε λεπτομέρειες" },
+  "products.detail.category": { en: "Category", el: "Κατηγορία" },
+  "products.detail.code": { en: "Product code", el: "Κωδικός προϊόντος" },
+  "products.detail.description": { en: "Description", el: "Περιγραφή" },
+  "products.detail.noDescription": { en: "More information about this product is available on request. Contact our team for a detailed technical data sheet.", el: "Περισσότερες πληροφορίες για αυτό το προϊόν διατίθενται κατόπιν αιτήματος. Επικοινωνήστε με την ομάδα μας για αναλυτικό τεχνικό φυλλάδιο." },
+  "products.detail.close": { en: "Close", el: "Κλείσιμο" },
 
   // Categories
   "cat.metal-repair": { en: "Metal Repair Composites", el: "Σύνθετα Επισκευής Μετάλλων" },

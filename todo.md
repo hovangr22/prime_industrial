@@ -67,3 +67,10 @@
 - [x] Admin panel: "Administrators" tab (owner-only) to add/remove admins and reset passwords
 - [x] Vitest: owner-only management + create returns temp password, no password material leaked (14/14)
 - [x] Verify in browser (owner recognized, Administrators tab visible), checkpoint, deliver
+
+## Product detail view (clickable products) (added)
+- [x] Make product cards on Products page clickable to open a detailed view (modal dialog)
+- [x] Detail view shows: large image, code, name (EN/EL), category badge, full description (EN/EL), CTA "Request a Quote"
+- [x] Bilingual via LanguageContext; fallback to noDescription text if empty
+- [x] Reuse products.list data (no extra fetch)
+- [x] Typecheck (clean), screenshot, checkpoint

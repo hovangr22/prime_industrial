@@ -1,16 +1,26 @@
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { PRODUCT_CATEGORIES, type ProductCategory } from "@/lib/siteContent";
 import { trpc } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
-import { PackageSearch } from "lucide-react";
+import type { inferRouterOutputs } from "@trpc/server";
+import { ArrowRight, PackageSearch } from "lucide-react";
 import { useMemo, useState } from "react";
+import type { AppRouter } from "../../../server/routers";
+
+type ProductRow = inferRouterOutputs<AppRouter>["products"]["list"][number];
 
 export default function Products() {
   const { t, pick } = useLanguage();
   const [active, setActive] = useState<ProductCategory | "all">("all");
+  const [selected, setSelected] = useState<ProductRow | null>(null);
   const productsQuery = trpc.products.list.useQuery();
 
   const products = productsQuery.data ?? [];
@@ -55,7 +65,16 @@ export default function Products() {
                 {filtered.map((p) => (
                   <article
                     key={p.id}
-                    className="group flex flex-col overflow-hidden rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-lg"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setSelected(p)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setSelected(p);
+                      }
+                    }}
+                    className="group flex cursor-pointer flex-col overflow-hidden rounded-xl border bg-card shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-brand"
                   >
                     <div className="h-48 overflow-hidden bg-secondary">
                       <img
@@ -75,6 +94,10 @@ export default function Products() {
                       <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground line-clamp-4">
                         {pick(p.descriptionEn, p.descriptionEl)}
                       </p>
+                      <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-orange-brand">
+                        {t("products.viewDetails")}
+                        <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
+                      </span>
                     </div>
                   </article>
                 ))}
@@ -83,7 +106,83 @@ export default function Products() {
           </div>
         </div>
       </section>
+
+      <ProductDetailDialog
+        product={selected}
+        onClose={() => setSelected(null)}
+        categoryImage={categoryImage}
+      />
     </div>
+  );
+}
+
+function ProductDetailDialog({
+  product,
+  onClose,
+  categoryImage,
+}: {
+  product: ProductRow | null;
+  onClose: () => void;
+  categoryImage: (cat: string) => string;
+}) {
+  const { t, pick } = useLanguage();
+
+  return (
+    <Dialog open={!!product} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-h-[90vh] gap-0 overflow-y-auto p-0 sm:max-w-3xl">
+        {product && (
+          <div className="grid md:grid-cols-2">
+            {/* Image */}
+            <div className="h-56 overflow-hidden bg-secondary md:h-full">
+              <img
+                src={product.imageUrl || categoryImage(product.category)}
+                alt={pick(product.nameEn, product.nameEl)}
+                className="h-full w-full object-cover"
+              />
+            </div>
+
+            {/* Content */}
+            <div className="flex flex-col p-6 md:p-8">
+              <span className="inline-flex w-fit rounded-full bg-accent px-2.5 py-0.5 text-xs font-semibold text-accent-foreground">
+                {t(`cat.${product.category}`)}
+              </span>
+              <DialogTitle className="mt-3 font-display text-2xl font-bold uppercase tracking-wide text-navy">
+                {product.code}
+              </DialogTitle>
+              <p className="mt-1 text-base font-semibold text-foreground">
+                {pick(product.nameEn, product.nameEl)}
+              </p>
+
+              <div className="mt-5">
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  {t("products.detail.description")}
+                </h4>
+                <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-foreground/90">
+                  {pick(product.descriptionEn, product.descriptionEl) ||
+                    t("products.detail.noDescription")}
+                </p>
+              </div>
+
+              <div className="mt-auto flex flex-col gap-3 pt-8 sm:flex-row">
+                <Button asChild className="bg-orange-brand text-white hover:bg-orange-brand/90">
+                  <a href="/contact">
+                    {t("cta.getQuote")}
+                    <ArrowRight className="ml-1.5 h-4 w-4" />
+                  </a>
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={onClose}
+                  className="border-navy/20 text-navy hover:bg-navy hover:text-white"
+                >
+                  {t("products.detail.close")}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 
