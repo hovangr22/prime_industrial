@@ -87,15 +87,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Stats strip */}
-        <div className="relative border-t border-white/10 bg-navy/80 backdrop-blur">
-          <div className="container grid grid-cols-2 gap-px lg:grid-cols-4">
-            <Stat value="70+" label={t("home.stats.experience")} />
-            <Stat value="24/7" label={t("home.stats.support")} />
-            <Stat value="5" label={t("home.stats.industries")} />
-            <Stat value={t("home.stats.exclusiveValue")} label={t("home.stats.exclusive")} />
-          </div>
-        </div>
+
       </section>
 
       {/* VALUE PROPS */}
@@ -236,15 +228,6 @@ function SectorCard({
         <span className="font-display text-base font-bold uppercase tracking-wide text-white">{label}</span>
       </div>
     </Link>
-  );
-}
-
-function Stat({ value, label }: { value: string; label: string }) {
-  return (
-    <div className="bg-navy px-4 py-6 text-center">
-      <div className="font-display text-3xl font-bold text-orange-brand lg:text-4xl">{value}</div>
-      <div className="mt-1 text-xs font-medium uppercase tracking-wide text-white/70">{label}</div>
-    </div>
   );
 }
 
