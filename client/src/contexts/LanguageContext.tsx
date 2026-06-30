@@ -7,7 +7,7 @@ type Dict = Record<string, { en: string; el: string }>;
 // Central UI string dictionary. Keys are dot-namespaced by area.
 const DICT: Dict = {
   // Brand / global
-  "brand.tagline": { en: "Official Exclusive Belzona Distributor for Greece", el: "Επίσημος Αποκλειστικός Διανομέας Belzona για την Ελλάδα" },
+  "brand.tagline": { en: "Official Exclusive Belzona Distributor for Greece & Cyprus", el: "Επίσημος Αποκλειστικός Διανομέας Belzona για Ελλάδα & Κύπρο" },
   "cta.contact": { en: "Contact Us", el: "Επικοινωνία" },
   "cta.getQuote": { en: "Request a Quote", el: "Ζητήστε Προσφορά" },
   "cta.learnMore": { en: "Learn More", el: "Μάθετε Περισσότερα" },
@@ -36,18 +36,18 @@ const DICT: Dict = {
   "home.stats.experience": { en: "Years of Belzona heritage", el: "Χρόνια κληρονομιάς Belzona" },
   "home.stats.support": { en: "Local technical support", el: "Τοπική τεχνική υποστήριξη" },
   "home.stats.industries": { en: "Core industries served", el: "Βασικοί κλάδοι που εξυπηρετούμε" },
-  "home.stats.exclusive": { en: "Distributor for Greece", el: "Διανομέας για την Ελλάδα" },
+  "home.stats.exclusive": { en: "Distributor for Greece & Cyprus", el: "Διανομέας για Ελλάδα & Κύπρο" },
   "home.stats.exclusiveValue": { en: "Exclusive", el: "Αποκλειστικός" },
 
   "home.value.title": { en: "Why Prime Industrial", el: "Γιατί Prime Industrial" },
   "home.value.subtitle": {
-    en: "We pair world-class Belzona technology with engineering expertise on the ground in Greece.",
-    el: "Συνδυάζουμε την κορυφαία τεχνολογία Belzona με τεχνογνωσία μηχανικού επί τόπου στην Ελλάδα.",
+    en: "We pair world-class Belzona technology with engineering expertise on the ground in Greece and Cyprus.",
+    el: "Συνδυάζουμε την κορυφαία τεχνολογία Belzona με τεχνογνωσία μηχανικού επί τόπου σε Ελλάδα και Κύπρο.",
   },
   "home.value.exclusive.title": { en: "Exclusive Belzona Distributor", el: "Αποκλειστικός Διανομέας Belzona" },
   "home.value.exclusive.body": {
-    en: "Prime Industrial is the sole authorised distributor of Belzona products in Greece, ensuring genuine materials and full manufacturer support.",
-    el: "Η Prime Industrial είναι ο μοναδικός εξουσιοδοτημένος διανομέας προϊόντων Belzona στην Ελλάδα, εξασφαλίζοντας γνήσια υλικά και πλήρη υποστήριξη κατασκευαστή.",
+    en: "Prime Industrial is the sole authorised distributor of Belzona products in Greece and Cyprus, ensuring genuine materials and full manufacturer support.",
+    el: "Η Prime Industrial είναι ο μοναδικός εξουσιοδοτημένος διανομέας προϊόντων Belzona σε Ελλάδα και Κύπρο, εξασφαλίζοντας γνήσια υλικά και πλήρη υποστήριξη κατασκευαστή.",
   },
   "home.value.support.title": { en: "24-Hour Local Support", el: "24ωρη Τοπική Υποστήριξη" },
   "home.value.support.body": {
@@ -93,8 +93,8 @@ const DICT: Dict = {
   // Industries
   "industries.title": { en: "Industries We Serve", el: "Κλάδοι που Εξυπηρετούμε" },
   "industries.subtitle": {
-    en: "Belzona solutions tailored to the demands of Greece's most critical sectors.",
-    el: "Λύσεις Belzona προσαρμοσμένες στις απαιτήσεις των πιο κρίσιμων κλάδων της Ελλάδας.",
+    en: "Belzona solutions tailored to the demands of the most critical sectors in Greece and Cyprus.",
+    el: "Λύσεις Belzona προσαρμοσμένες στις απαιτήσεις των πιο κρίσιμων κλάδων σε Ελλάδα και Κύπρο.",
   },
 
   // Services
@@ -105,8 +105,8 @@ const DICT: Dict = {
   },
   "services.support.title": { en: "24/7 Local Technical Support", el: "24/7 Τοπική Τεχνική Υποστήριξη" },
   "services.support.body": {
-    en: "Round-the-clock guidance from Belzona-trained engineers based in Greece, available whenever a critical issue arises.",
-    el: "Ολοήμερη καθοδήγηση από μηχανικούς εκπαιδευμένους στη Belzona με έδρα την Ελλάδα, διαθέσιμη όποτε προκύψει κρίσιμο ζήτημα.",
+    en: "Round-the-clock guidance from Belzona-trained engineers serving Greece and Cyprus, available whenever a critical issue arises.",
+    el: "Ολοήμερη καθοδήγηση από μηχανικούς εκπαιδευμένους στη Belzona που εξυπηρετούν Ελλάδα και Κύπρο, διαθέσιμη όποτε προκύψει κρίσιμο ζήτημα.",
   },
   "services.onsite.title": { en: "On-Site Assistance", el: "Επιτόπια Συνδρομή" },
   "services.onsite.body": {
@@ -122,8 +122,8 @@ const DICT: Dict = {
   // About
   "about.title": { en: "About Prime Industrial", el: "Σχετικά με την Prime Industrial" },
   "about.lead": {
-    en: "Prime Industrial is the Exclusive Authorised Distributor of Belzona products for Greece, serving industry and maritime clients with proven repair and protection solutions.",
-    el: "Η Prime Industrial είναι ο Αποκλειστικός Εξουσιοδοτημένος Διανομέας προϊόντων Belzona για την Ελλάδα, εξυπηρετώντας πελάτες βιομηχανίας και ναυτιλίας με δοκιμασμένες λύσεις επισκευής και προστασίας.",
+    en: "Prime Industrial is the Exclusive Authorised Distributor of Belzona products for Greece and Cyprus, serving industry and maritime clients with proven repair and protection solutions.",
+    el: "Η Prime Industrial είναι ο Αποκλειστικός Εξουσιοδοτημένος Διανομέας προϊόντων Belzona για Ελλάδα και Κύπρο, εξυπηρετώντας πελάτες βιομηχανίας και ναυτιλίας με δοκιμασμένες λύσεις επισκευής και προστασίας.",
   },
   "about.story.title": { en: "Who We Are", el: "Ποιοι Είμαστε" },
   "about.story.body": {
@@ -132,11 +132,11 @@ const DICT: Dict = {
   },
   "about.partnership.title": { en: "Our Belzona Partnership", el: "Η Συνεργασία μας με τη Belzona" },
   "about.partnership.body": {
-    en: "As the official and exclusive Belzona distributor in Greece, we have direct access to Belzona's manufacturing know-how, technical resources and continuous product innovation. Every solution we deliver carries the full backing of Belzona International.",
-    el: "Ως ο επίσημος και αποκλειστικός διανομέας Belzona στην Ελλάδα, έχουμε άμεση πρόσβαση στην τεχνογνωσία παραγωγής, τους τεχνικούς πόρους και τη συνεχή καινοτομία προϊόντων της Belzona. Κάθε λύση που παρέχουμε φέρει την πλήρη υποστήριξη της Belzona International.",
+    en: "As the official and exclusive Belzona distributor for Greece and Cyprus, we have direct access to Belzona's manufacturing know-how, technical resources and continuous product innovation. Every solution we deliver carries the full backing of Belzona International.",
+    el: "Ως ο επίσημος και αποκλειστικός διανομέας Belzona για Ελλάδα και Κύπρο, έχουμε άμεση πρόσβαση στην τεχνογνωσία παραγωγής, τους τεχνικούς πόρους και τη συνεχή καινοτομία προϊόντων της Belzona. Κάθε λύση που παρέχουμε φέρει την πλήρη υποστήριξη της Belzona International.",
   },
   "about.badge.alt": { en: "Belzona Authorised Distributor", el: "Εξουσιοδοτημένος Διανομέας Belzona" },
-  "about.badge.caption": { en: "Official Authorised Belzona Distributor — Greece", el: "Επίσημος Εξουσιοδοτημένος Διανομέας Belzona — Ελλάδα" },
+  "about.badge.caption": { en: "Official Authorised Belzona Distributor — Greece & Cyprus", el: "Επίσημος Εξουσιοδοτημένος Διανομέας Belzona — Ελλάδα & Κύπρο" },
 
   // Contact
   "contact.title": { en: "Get in Touch", el: "Επικοινωνήστε μαζί μας" },
@@ -165,8 +165,8 @@ const DICT: Dict = {
   // Footer
   "footer.company": { en: "Prime Industrial", el: "Prime Industrial" },
   "footer.about": {
-    en: "Official Exclusive Belzona Distributor for Greece, serving industry and maritime sectors with proven repair and protection solutions.",
-    el: "Επίσημος Αποκλειστικός Διανομέας Belzona για την Ελλάδα, εξυπηρετώντας τους τομείς βιομηχανίας και ναυτιλίας με δοκιμασμένες λύσεις επισκευής και προστασίας.",
+    en: "Official Exclusive Belzona Distributor for Greece & Cyprus, serving industry and maritime sectors with proven repair and protection solutions.",
+    el: "Επίσημος Αποκλειστικός Διανομέας Belzona για Ελλάδα & Κύπρο, εξυπηρετώντας τους τομείς βιομηχανίας και ναυτιλίας με δοκιμασμένες λύσεις επισκευής και προστασίας.",
   },
   "footer.quickLinks": { en: "Quick Links", el: "Σύνδεσμοι" },
   "footer.contact": { en: "Contact", el: "Επικοινωνία" },

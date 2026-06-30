@@ -2,7 +2,7 @@
 
 export const LOGO_URL = "/manus-storage/prime_logo_a8c45322.png";
 export const HERO_IMAGE = "/manus-storage/hero_industrial_maritime_8029b615.jpg";
-export const DISTRIBUTOR_BADGE = "/manus-storage/distributor_badge_56fb8a9c.png";
+export const DISTRIBUTOR_BADGE = "/manus-storage/distributor_badge_b9f0e393.png";
 
 export const CTA_INDUSTRY_IMG = "/manus-storage/cta_industry_3e0c5ede.jpg";
 export const CTA_MARITIME_IMG = "/manus-storage/cta_maritime_c0222667.jpg";
