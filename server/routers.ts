@@ -6,6 +6,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { TRPCError } from "@trpc/server";
 import { adminProcedure, ownerProcedure, publicProcedure, router } from "./_core/trpc";
 import { storagePut } from "./storage";
+import { sendEmail } from "./_core/email";
 import {
   createApplication,
   createInquiry,
@@ -158,6 +159,24 @@ export const appRouter = router({
         await notifyOwner({
           title: `New inquiry from ${input.name}${input.company ? ` (${input.company})` : ""}`,
           content: [
+            `Sector: ${sectorLabel}`,
+            `Name: ${input.name}`,
+            input.company ? `Company: ${input.company}` : null,
+            `Email: ${input.email}`,
+            input.phone ? `Phone: ${input.phone}` : null,
+            "",
+            "Message:",
+            input.message,
+          ]
+            .filter(Boolean)
+            .join("\n"),
+        }).catch(() => false);
+
+        // Send email to info@primeindustrial.com (best-effort, non-blocking on failure).
+        await sendEmail({
+          to: "info@primeindustrial.com",
+          subject: `New Inquiry from ${input.name}${input.company ? ` (${input.company})` : ""}`,
+          body: [
             `Sector: ${sectorLabel}`,
             `Name: ${input.name}`,
             input.company ? `Company: ${input.company}` : null,
