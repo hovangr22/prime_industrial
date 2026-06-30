@@ -4,6 +4,12 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --color-navy: var(--navy);
+  --color-navy-foreground: var(--navy-foreground);
+  --color-orange-brand: var(--orange-brand);
+  --color-orange-brand-foreground: var(--orange-brand-foreground);
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Barlow Condensed", "Inter", ui-sans-serif, system-ui, sans-serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -43,33 +49,39 @@
 }
 
 :root {
-  --primary: var(--color-blue-700);
-  --primary-foreground: var(--color-blue-50);
-  --sidebar-primary: var(--color-blue-600);
-  --sidebar-primary-foreground: var(--color-blue-50);
-  --chart-1: var(--color-blue-300);
-  --chart-2: var(--color-blue-500);
-  --chart-3: var(--color-blue-600);
-  --chart-4: var(--color-blue-700);
-  --chart-5: var(--color-blue-800);
-  --radius: 0.65rem;
+  /* Prime Industrial brand */
+  --navy: oklch(0.31 0.07 256);
+  --navy-foreground: oklch(0.98 0.01 256);
+  --orange-brand: oklch(0.69 0.17 47);
+  --orange-brand-foreground: oklch(0.99 0.01 80);
+
+  --primary: oklch(0.31 0.07 256);
+  --primary-foreground: oklch(0.98 0.01 256);
+  --sidebar-primary: oklch(0.31 0.07 256);
+  --sidebar-primary-foreground: oklch(0.98 0.01 256);
+  --chart-1: oklch(0.69 0.17 47);
+  --chart-2: oklch(0.5 0.09 256);
+  --chart-3: oklch(0.41 0.08 256);
+  --chart-4: oklch(0.31 0.07 256);
+  --chart-5: oklch(0.24 0.06 256);
+  --radius: 0.5rem;
   --background: oklch(1 0 0);
-  --foreground: oklch(0.235 0.015 65);
+  --foreground: oklch(0.22 0.02 256);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.235 0.015 65);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.235 0.015 65);
-  --secondary: oklch(0.98 0.001 286.375);
-  --secondary-foreground: oklch(0.4 0.015 65);
+  --secondary: oklch(0.96 0.012 256);
+  --secondary-foreground: oklch(0.31 0.07 256);
   --muted: oklch(0.967 0.001 286.375);
   --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.141 0.005 285.823);
+  --accent: oklch(0.96 0.05 47 / 60%);
+  --accent-foreground: oklch(0.45 0.15 47);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.623 0.214 259.815);
+  --border: oklch(0.9 0.008 256);
+  --input: oklch(0.9 0.008 256);
+  --ring: oklch(0.69 0.17 47);
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.235 0.015 65);
   --sidebar-accent: oklch(0.967 0.001 286.375);
@@ -118,7 +130,15 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  .font-display {
+    font-family: var(--font-display);
+    letter-spacing: 0.01em;
+  }
+  :root {
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
