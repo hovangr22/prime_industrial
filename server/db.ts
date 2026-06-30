@@ -7,8 +7,12 @@ import {
   InsertInquiry,
   InsertProduct,
   InsertSiteContent,
+  InsertStaffAdmin,
+  InsertStaffSession,
   products,
   siteContent,
+  staffAdmins,
+  staffSessions,
   users,
   type InsertUser,
 } from "../drizzle/schema";
@@ -232,4 +236,87 @@ export async function seedSiteContent(row: InsertSiteContent) {
         sortOrder: row.sortOrder ?? 0,
       },
     });
+}
+
+/* --------------------------- Staff Admins --------------------------- */
+
+export async function listStaffAdmins() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(staffAdmins).orderBy(asc(staffAdmins.createdAt));
+}
+
+export async function getStaffAdminById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db.select().from(staffAdmins).where(eq(staffAdmins.id, id)).limit(1);
+  return rows[0];
+}
+
+export async function getStaffAdminByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db
+    .select()
+    .from(staffAdmins)
+    .where(eq(staffAdmins.email, email.toLowerCase().trim()))
+    .limit(1);
+  return rows[0];
+}
+
+export async function createStaffAdmin(row: InsertStaffAdmin): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const res = await db.insert(staffAdmins).values({ ...row, email: row.email.toLowerCase().trim() });
+  // mysql2 returns insertId on the first element of the result tuple.
+  const insertId = (res as unknown as Array<{ insertId: number }>)[0]?.insertId;
+  return Number(insertId);
+}
+
+export async function updateStaffAdmin(
+  id: number,
+  set: Partial<Pick<InsertStaffAdmin, "name" | "active" | "passwordHash" | "passwordSalt" | "mustChangePassword" | "lastSignedIn">>,
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(staffAdmins).set(set).where(eq(staffAdmins.id, id));
+}
+
+export async function deleteStaffAdmin(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  // Remove the admin and any active sessions they hold.
+  await db.delete(staffSessions).where(eq(staffSessions.staffId, id));
+  await db.delete(staffAdmins).where(eq(staffAdmins.id, id));
+}
+
+/* --------------------------- Staff Sessions --------------------------- */
+
+export async function createStaffSession(row: InsertStaffSession) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(staffSessions).values(row);
+}
+
+export async function getStaffSessionByTokenHash(tokenHash: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db
+    .select()
+    .from(staffSessions)
+    .where(eq(staffSessions.tokenHash, tokenHash))
+    .limit(1);
+  return rows[0];
+}
+
+export async function deleteStaffSessionByTokenHash(tokenHash: string) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(staffSessions).where(eq(staffSessions.tokenHash, tokenHash));
+}
+
+export async function deleteStaffSessionsForStaff(staffId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(staffSessions).where(eq(staffSessions.staffId, staffId));
 }

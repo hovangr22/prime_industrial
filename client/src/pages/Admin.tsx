@@ -40,9 +40,16 @@ import { toast } from "sonner";
 import { Link } from "wouter";
 
 export default function Admin() {
-  const { user, loading, isAuthenticated, logout } = useAuth();
+  const { loading: manusLoading, logout: manusLogout } = useAuth();
+  const utils = trpc.useUtils();
+  // Single source of truth for "who is the admin": Manus owner OR staff session.
+  const identity = trpc.staffAuth.me.useQuery();
 
-  if (loading) {
+  const staffLogout = trpc.staffAuth.logout.useMutation({
+    onSuccess: () => identity.refetch(),
+  });
+
+  if (manusLoading || identity.isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-navy" />
@@ -50,43 +57,189 @@ export default function Admin() {
     );
   }
 
-  if (!isAuthenticated) {
-    return (
-      <Gate
-        title="Admin Login"
-        body="Please sign in with the owner account to manage the website."
-        action={
+  const me = identity.data;
+
+  // Not signed in as owner or staff → show combined login screen.
+  if (!me) {
+    return <LoginScreen onStaffLoggedIn={() => identity.refetch()} />;
+  }
+
+  // Staff with a temporary password must set a new one before continuing.
+  if (me.kind === "staff" && me.mustChangePassword) {
+    return <ForcePasswordChange onDone={() => utils.staffAuth.me.invalidate()} />;
+  }
+
+  const handleLogout = () => {
+    if (me.kind === "owner") {
+      manusLogout();
+    } else {
+      staffLogout.mutate();
+    }
+  };
+
+  return (
+    <AdminDashboard
+      onLogout={handleLogout}
+      userName={me.name}
+      isOwner={me.kind === "owner"}
+      isStaff={me.kind === "staff"}
+    />
+  );
+}
+
+/* ------------------------------ Login screen ---------------------------- */
+
+function LoginScreen({ onStaffLoggedIn }: { onStaffLoggedIn: () => void }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const loginM = trpc.staffAuth.login.useMutation({
+    onSuccess: () => {
+      toast.success("Signed in.");
+      onStaffLoggedIn();
+    },
+    onError: (e) => toast.error(e.message || "Invalid email or password."),
+  });
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) {
+      toast.error("Enter your email and password.");
+      return;
+    }
+    loginM.mutate({ email, password });
+  };
+
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-secondary px-4">
+      <div className="w-full max-w-sm rounded-xl border bg-card p-7 shadow-sm">
+        <div className="flex flex-col items-center text-center">
+          <img src={LOGO_URL} alt="Prime Industrial" className="h-11 w-auto" />
+          <h1 className="mt-5 font-display text-2xl font-bold uppercase tracking-wide text-navy">
+            Admin Sign In
+          </h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            Sign in with your administrator email and password.
+          </p>
+        </div>
+
+        <form onSubmit={submit} className="mt-6 space-y-3">
+          <div className="space-y-1.5">
+            <Label className="text-sm font-semibold text-navy">Email</Label>
+            <Input
+              type="email"
+              autoComplete="username"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@company.com"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-sm font-semibold text-navy">Password</Label>
+            <Input
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+            />
+          </div>
           <Button
-            className="bg-orange-brand text-orange-brand-foreground hover:bg-orange-brand/90"
-            onClick={() => (window.location.href = getLoginUrl("/admin"))}
+            type="submit"
+            className="w-full bg-orange-brand text-orange-brand-foreground hover:bg-orange-brand/90"
+            disabled={loginM.isPending}
           >
+            {loginM.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Sign In
           </Button>
-        }
-      />
-    );
-  }
+        </form>
 
-  if (user?.role !== "admin") {
-    return (
-      <Gate
-        title="Access Restricted"
-        body="This area is reserved for the site owner. Your account does not have admin permissions."
-        action={
-          <div className="flex gap-3">
-            <Button asChild variant="outline">
-              <Link href="/">Back to Home</Link>
-            </Button>
-            <Button variant="outline" onClick={() => logout()}>
-              <LogOut className="mr-2 h-4 w-4" /> Sign Out
-            </Button>
+        <div className="mt-6 border-t pt-5 text-center">
+          <p className="text-xs text-muted-foreground">Site owner?</p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-2"
+            onClick={() => (window.location.href = getLoginUrl("/admin"))}
+          >
+            Sign in with Manus (Owner)
+          </Button>
+        </div>
+        <div className="mt-4 text-center">
+          <Link href="/" className="text-xs text-muted-foreground underline-offset-4 hover:underline">
+            ← Back to website
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------- Forced password change (first login) --------------- */
+
+function ForcePasswordChange({ onDone }: { onDone: () => void }) {
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [confirm2, setConfirm2] = useState("");
+
+  const changeM = trpc.staffAuth.changePassword.useMutation({
+    onSuccess: () => {
+      toast.success("Password updated.");
+      onDone();
+    },
+    onError: (e) => toast.error(e.message || "Could not update password."),
+  });
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (next.length < 8) {
+      toast.error("New password must be at least 8 characters.");
+      return;
+    }
+    if (next !== confirm2) {
+      toast.error("Passwords do not match.");
+      return;
+    }
+    changeM.mutate({ currentPassword: current, newPassword: next });
+  };
+
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-secondary px-4">
+      <div className="w-full max-w-sm rounded-xl border bg-card p-7 shadow-sm">
+        <div className="text-center">
+          <img src={LOGO_URL} alt="Prime Industrial" className="mx-auto h-11 w-auto" />
+          <h1 className="mt-5 font-display text-xl font-bold uppercase tracking-wide text-navy">
+            Set Your Password
+          </h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            For security, please replace your temporary password before continuing.
+          </p>
+        </div>
+        <form onSubmit={submit} className="mt-6 space-y-3">
+          <div className="space-y-1.5">
+            <Label className="text-sm font-semibold text-navy">Temporary password</Label>
+            <Input type="password" value={current} onChange={(e) => setCurrent(e.target.value)} />
           </div>
-        }
-      />
-    );
-  }
-
-  return <AdminDashboard onLogout={logout} userName={user?.name ?? "Owner"} />;
+          <div className="space-y-1.5">
+            <Label className="text-sm font-semibold text-navy">New password</Label>
+            <Input type="password" value={next} onChange={(e) => setNext(e.target.value)} placeholder="At least 8 characters" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-sm font-semibold text-navy">Confirm new password</Label>
+            <Input type="password" value={confirm2} onChange={(e) => setConfirm2(e.target.value)} />
+          </div>
+          <Button
+            type="submit"
+            className="w-full bg-orange-brand text-orange-brand-foreground hover:bg-orange-brand/90"
+            disabled={changeM.isPending}
+          >
+            {changeM.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Save Password
+          </Button>
+        </form>
+      </div>
+    </div>
+  );
 }
 
 function Gate({ title, body, action }: { title: string; body: string; action: React.ReactNode }) {
@@ -103,7 +256,17 @@ function Gate({ title, body, action }: { title: string; body: string; action: Re
   );
 }
 
-function AdminDashboard({ onLogout, userName }: { onLogout: () => void; userName: string }) {
+function AdminDashboard({
+  onLogout,
+  userName,
+  isOwner,
+  isStaff,
+}: {
+  onLogout: () => void;
+  userName: string;
+  isOwner: boolean;
+  isStaff: boolean;
+}) {
   return (
     <div className="min-h-screen bg-secondary">
       <header className="border-b bg-navy text-navy-foreground">
@@ -115,7 +278,10 @@ function AdminDashboard({ onLogout, userName }: { onLogout: () => void; userName
             <span className="font-display text-lg font-bold uppercase tracking-wide">Admin</span>
           </div>
           <div className="flex items-center gap-3 text-sm">
-            <span className="hidden text-white/70 sm:inline">{userName}</span>
+            <span className="hidden text-white/70 sm:inline">
+              {userName}
+              {isOwner ? " · Owner" : ""}
+            </span>
             <Button asChild variant="outline" size="sm" className="border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white">
               <Link href="/">View Site</Link>
             </Button>
@@ -133,6 +299,8 @@ function AdminDashboard({ onLogout, userName }: { onLogout: () => void; userName
             <TabsTrigger value="applications">Applications</TabsTrigger>
             <TabsTrigger value="content">Page Content</TabsTrigger>
             <TabsTrigger value="inquiries">Inquiries</TabsTrigger>
+            {isOwner && <TabsTrigger value="admins">Administrators</TabsTrigger>}
+            {isStaff && <TabsTrigger value="account">My Account</TabsTrigger>}
           </TabsList>
           <TabsContent value="products" className="mt-6">
             <ProductsAdmin />
@@ -146,8 +314,278 @@ function AdminDashboard({ onLogout, userName }: { onLogout: () => void; userName
           <TabsContent value="inquiries" className="mt-6">
             <InquiriesAdmin />
           </TabsContent>
+          {isOwner && (
+            <TabsContent value="admins" className="mt-6">
+              <AdministratorsAdmin />
+            </TabsContent>
+          )}
+          {isStaff && (
+            <TabsContent value="account" className="mt-6">
+              <MyAccount />
+            </TabsContent>
+          )}
         </Tabs>
       </main>
+    </div>
+  );
+}
+
+/* ---------------------- Administrators (owner only) --------------------- */
+
+function AdministratorsAdmin() {
+  const utils = trpc.useUtils();
+  const listQuery = trpc.staffAdmins.list.useQuery();
+  const [open, setOpen] = useState(false);
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [credential, setCredential] = useState<{ email: string; tempPassword: string } | null>(null);
+
+  const refresh = () => utils.staffAdmins.list.invalidate();
+
+  const createM = trpc.staffAdmins.create.useMutation({
+    onSuccess: (res) => {
+      refresh();
+      setOpen(false);
+      setEmail("");
+      setName("");
+      setCredential({ email: res.email, tempPassword: res.tempPassword });
+    },
+    onError: (e) => toast.error(e.message || "Could not create administrator."),
+  });
+  const setActiveM = trpc.staffAdmins.setActive.useMutation({
+    onSuccess: () => {
+      refresh();
+      toast.success("Updated.");
+    },
+    onError: () => toast.error("Could not update."),
+  });
+  const resetM = trpc.staffAdmins.resetPassword.useMutation({
+    onSuccess: (res, vars) => {
+      const target = (listQuery.data ?? []).find((a) => a.id === vars.id);
+      setCredential({ email: target?.email ?? "administrator", tempPassword: res.tempPassword });
+    },
+    onError: () => toast.error("Could not reset password."),
+  });
+  const deleteM = trpc.staffAdmins.delete.useMutation({
+    onSuccess: () => {
+      refresh();
+      toast.success("Administrator removed.");
+    },
+    onError: () => toast.error("Could not remove."),
+  });
+
+  const rows = listQuery.data ?? [];
+
+  return (
+    <div>
+      <div className="mb-5 flex items-center justify-between">
+        <div>
+          <h2 className="font-display text-xl font-bold uppercase tracking-wide text-navy">
+            Administrators <span className="text-base text-muted-foreground">({rows.length})</span>
+          </h2>
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+            Grant content-management access to other people using email + password. They can manage
+            products, applications, page content and inquiries — but only you (the owner) can manage
+            this list.
+          </p>
+        </div>
+        <Button className="bg-navy text-white hover:bg-navy/90" onClick={() => setOpen(true)}>
+          <Plus className="mr-1.5 h-4 w-4" /> Add Administrator
+        </Button>
+      </div>
+
+      {listQuery.isLoading ? (
+        <LoadingRows />
+      ) : rows.length === 0 ? (
+        <EmptyAdmin message="No additional administrators yet. Add one to delegate site management." />
+      ) : (
+        <div className="grid gap-3">
+          {rows.map((a) => (
+            <div key={a.id} className="flex flex-wrap items-center gap-4 rounded-lg border bg-card p-4 shadow-sm">
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-semibold text-navy">{a.name || a.email}</p>
+                <p className="truncate text-sm text-muted-foreground">{a.email}</p>
+              </div>
+              {a.mustChangePassword && (
+                <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
+                  Pending first login
+                </span>
+              )}
+              <span
+                className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                  a.active ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {a.active ? "Active" : "Disabled"}
+              </span>
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={a.active}
+                  onCheckedChange={(v) => setActiveM.mutate({ id: a.id, active: v })}
+                  aria-label="Toggle active"
+                />
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-muted-foreground"
+                  disabled={resetM.isPending}
+                  onClick={() => {
+                    if (confirm(`Issue a new temporary password for ${a.email}?`)) resetM.mutate({ id: a.id });
+                  }}
+                >
+                  <RotateCcw className="mr-1.5 h-3.5 w-3.5" /> Reset password
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="text-destructive hover:text-destructive"
+                  onClick={() => {
+                    if (confirm(`Remove ${a.email}? They will lose access immediately.`)) deleteM.mutate({ id: a.id });
+                  }}
+                  aria-label="Remove"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Create dialog */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Administrator</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <FormRow label="Email">
+              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="person@company.com" />
+            </FormRow>
+            <FormRow label="Name (optional)">
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" />
+            </FormRow>
+            <p className="text-xs text-muted-foreground">
+              A one-time temporary password will be generated. Share it with the person; they will be
+              asked to set their own password on first sign-in.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              className="bg-orange-brand text-orange-brand-foreground hover:bg-orange-brand/90"
+              disabled={createM.isPending || !email}
+              onClick={() => createM.mutate({ email, name: name || null })}
+            >
+              {createM.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Create
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Temporary-password reveal dialog */}
+      <Dialog open={!!credential} onOpenChange={(o) => !o && setCredential(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Temporary password</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Share these credentials securely with <strong>{credential?.email}</strong>. This
+              password is shown only once.
+            </p>
+            <div className="rounded-lg border bg-secondary p-4">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Email</p>
+              <p className="font-mono text-sm text-navy">{credential?.email}</p>
+              <p className="mt-3 text-xs uppercase tracking-wide text-muted-foreground">Temporary password</p>
+              <p className="font-mono text-lg font-bold text-navy">{credential?.tempPassword}</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (credential) {
+                  navigator.clipboard?.writeText(
+                    `Email: ${credential.email}\nTemporary password: ${credential.tempPassword}`,
+                  );
+                  toast.success("Copied to clipboard.");
+                }
+              }}
+            >
+              Copy
+            </Button>
+            <Button
+              className="bg-navy text-white hover:bg-navy/90"
+              onClick={() => {
+                refresh();
+                setCredential(null);
+              }}
+            >
+              Done
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+/* ----------------------- My Account (staff only) ------------------------ */
+
+function MyAccount() {
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [confirm2, setConfirm2] = useState("");
+
+  const changeM = trpc.staffAuth.changePassword.useMutation({
+    onSuccess: () => {
+      toast.success("Password updated.");
+      setCurrent("");
+      setNext("");
+      setConfirm2("");
+    },
+    onError: (e) => toast.error(e.message || "Could not update password."),
+  });
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (next.length < 8) {
+      toast.error("New password must be at least 8 characters.");
+      return;
+    }
+    if (next !== confirm2) {
+      toast.error("Passwords do not match.");
+      return;
+    }
+    changeM.mutate({ currentPassword: current, newPassword: next });
+  };
+
+  return (
+    <div className="max-w-md">
+      <h2 className="font-display text-xl font-bold uppercase tracking-wide text-navy">Change Password</h2>
+      <form onSubmit={submit} className="mt-5 space-y-3 rounded-lg border bg-card p-5 shadow-sm">
+        <FormRow label="Current password">
+          <Input type="password" value={current} onChange={(e) => setCurrent(e.target.value)} />
+        </FormRow>
+        <FormRow label="New password">
+          <Input type="password" value={next} onChange={(e) => setNext(e.target.value)} placeholder="At least 8 characters" />
+        </FormRow>
+        <FormRow label="Confirm new password">
+          <Input type="password" value={confirm2} onChange={(e) => setConfirm2(e.target.value)} />
+        </FormRow>
+        <Button
+          type="submit"
+          className="bg-orange-brand text-orange-brand-foreground hover:bg-orange-brand/90"
+          disabled={changeM.isPending}
+        >
+          {changeM.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Update Password
+        </Button>
+      </form>
     </div>
   );
 }

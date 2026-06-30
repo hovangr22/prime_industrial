@@ -55,3 +55,15 @@
 - [x] Frontend: load DB content with dictionary fallback via t() override, keep i18n working
 - [x] Vitest: cover siteContent admin-only update/reset + public list (11/11 passing)
 - [x] Verify owner-only gate + checkpoint + deliver
+
+## Staff Admins (email/password, owner-managed) (added)
+- [x] Add `staff_admins` table (email, name, passwordHash, salt, active, createdAt) + migrate
+- [x] Add `staff_sessions` table (tokenHash, staffId, expiresAt) for password-login sessions
+- [x] Secure password hashing (scrypt) + constant-time compare; no plaintext stored; hashed session tokens
+- [x] Backend: staffAuth.login / logout / me / changePassword (sets httpOnly cookie)
+- [x] Backend: owner-only staffAdmins CRUD (create w/ temp password, setActive, delete, resetPassword)
+- [x] adminProcedure accepts Manus owner OR valid staff session; ownerProcedure for admin mgmt
+- [x] Login UI: email/password form on /admin + forced first-login password change
+- [x] Admin panel: "Administrators" tab (owner-only) to add/remove admins and reset passwords
+- [x] Vitest: owner-only management + create returns temp password, no password material leaked (14/14)
+- [x] Verify in browser (owner recognized, Administrators tab visible), checkpoint, deliver

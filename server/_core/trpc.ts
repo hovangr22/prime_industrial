@@ -27,7 +27,26 @@ const requireUser = t.middleware(async opts => {
 
 export const protectedProcedure = t.procedure.use(requireUser);
 
+// Admin access: granted to the Manus owner (user.role === 'admin') OR to a
+// staff admin authenticated via email/password session.
 export const adminProcedure = t.procedure.use(
+  t.middleware(async opts => {
+    const { ctx, next } = opts;
+
+    const isManusAdmin = ctx.user?.role === 'admin';
+    const isStaffAdmin = !!ctx.staff;
+
+    if (!isManusAdmin && !isStaffAdmin) {
+      throw new TRPCError({ code: "FORBIDDEN", message: NOT_ADMIN_ERR_MSG });
+    }
+
+    return next({ ctx });
+  }),
+);
+
+// Owner-only access: strictly the Manus owner account. Used for sensitive
+// operations such as managing which staff admins exist.
+export const ownerProcedure = t.procedure.use(
   t.middleware(async opts => {
     const { ctx, next } = opts;
 

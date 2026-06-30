@@ -117,3 +117,43 @@ export const siteContent = mysqlTable("site_content", {
 
 export type SiteContent = typeof siteContent.$inferSelect;
 export type InsertSiteContent = typeof siteContent.$inferInsert;
+
+/**
+ * Staff administrators who log in with email + password (no Manus account needed).
+ * The site owner creates and manages these from the admin panel.
+ * Passwords are never stored in plaintext: we keep a scrypt hash + per-user salt.
+ */
+export const staffAdmins = mysqlTable("staff_admins", {
+  id: int("id").autoincrement().primaryKey(),
+  email: varchar("email", { length: 320 }).notNull().unique(),
+  name: varchar("name", { length: 255 }),
+  /** scrypt-derived hash (hex). Null only briefly before a password is set. */
+  passwordHash: varchar("passwordHash", { length: 255 }),
+  /** Random per-user salt (hex) used with scrypt. */
+  passwordSalt: varchar("passwordSalt", { length: 255 }),
+  /** When true the admin must set a new password on next login (temp password issued). */
+  mustChangePassword: boolean("mustChangePassword").default(true).notNull(),
+  active: boolean("active").default(true).notNull(),
+  lastSignedIn: timestamp("lastSignedIn"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type StaffAdmin = typeof staffAdmins.$inferSelect;
+export type InsertStaffAdmin = typeof staffAdmins.$inferInsert;
+
+/**
+ * Server-side sessions for password-authenticated staff admins.
+ * The session token is stored in an httpOnly cookie; only its hash lives here.
+ */
+export const staffSessions = mysqlTable("staff_sessions", {
+  id: int("id").autoincrement().primaryKey(),
+  /** SHA-256 hash (hex) of the opaque session token held in the cookie. */
+  tokenHash: varchar("tokenHash", { length: 255 }).notNull().unique(),
+  staffId: int("staffId").notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type StaffSession = typeof staffSessions.$inferSelect;
+export type InsertStaffSession = typeof staffSessions.$inferInsert;

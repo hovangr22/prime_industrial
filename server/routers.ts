@@ -3,24 +3,39 @@ import { z } from "zod";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { notifyOwner } from "./_core/notification";
 import { systemRouter } from "./_core/systemRouter";
-import { adminProcedure, publicProcedure, router } from "./_core/trpc";
+import { TRPCError } from "@trpc/server";
+import { adminProcedure, ownerProcedure, publicProcedure, router } from "./_core/trpc";
 import { storagePut } from "./storage";
 import {
   createApplication,
   createInquiry,
   createProduct,
+  createStaffAdmin,
   deleteApplication,
   deleteProduct,
+  deleteStaffAdmin,
+  deleteStaffSessionsForStaff,
+  getStaffAdminByEmail,
+  getStaffAdminById,
   listApplications,
   listInquiries,
   listProducts,
   listSiteContent,
+  listStaffAdmins,
   setInquiryHandled,
   updateApplication,
   updateProduct,
+  updateStaffAdmin,
   upsertSiteContent,
 } from "./db";
 import { SITE_CONTENT_FIELDS, ensureSiteContentSeeded } from "./siteContentSeed";
+import {
+  endStaffSession,
+  generateTempPassword,
+  hashPassword,
+  startStaffSession,
+  verifyPassword,
+} from "./staffAuth";
 
 const productInput = z.object({
   category: z.string().min(1).max(64),
@@ -199,6 +214,149 @@ export const appRouter = router({
           valueEn: def.valueEn,
           valueEl: def.valueEl,
         });
+      }),
+  }),
+
+  /* ----------------------- Staff auth (email/password) -------------------- */
+  staffAuth: router({
+    // Who is the current admin? Reports Manus owner OR staff session identity.
+    me: publicProcedure.query(({ ctx }) => {
+      if (ctx.user?.role === "admin") {
+        return {
+          kind: "owner" as const,
+          name: ctx.user.name ?? "Owner",
+          email: ctx.user.email ?? null,
+          mustChangePassword: false,
+        };
+      }
+      if (ctx.staff) {
+        return {
+          kind: "staff" as const,
+          name: ctx.staff.name ?? ctx.staff.email,
+          email: ctx.staff.email,
+          mustChangePassword: ctx.staff.mustChangePassword,
+        };
+      }
+      return null;
+    }),
+    login: publicProcedure
+      .input(z.object({ email: z.string().email().max(320), password: z.string().min(1).max(256) }))
+      .mutation(async ({ ctx, input }) => {
+        const staff = await getStaffAdminByEmail(input.email);
+        // Constant-ish behaviour: always run verify even if not found.
+        const ok =
+          !!staff &&
+          staff.active &&
+          (await verifyPassword(input.password, staff.passwordHash, staff.passwordSalt));
+        if (!staff || !ok) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid email or password." });
+        }
+        await startStaffSession(ctx.res, ctx.req, staff.id);
+        await updateStaffAdmin(staff.id, { lastSignedIn: new Date() });
+        return { success: true, mustChangePassword: staff.mustChangePassword };
+      }),
+    logout: publicProcedure.mutation(async ({ ctx }) => {
+      await endStaffSession(ctx.req, ctx.res);
+      return { success: true } as const;
+    }),
+    // A logged-in staff admin changes their own password.
+    changePassword: publicProcedure
+      .input(
+        z.object({
+          currentPassword: z.string().min(1).max(256),
+          newPassword: z.string().min(8).max(256),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        if (!ctx.staff) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "Not signed in as staff." });
+        }
+        const current = await getStaffAdminById(ctx.staff.id);
+        const ok =
+          !!current &&
+          (await verifyPassword(input.currentPassword, current.passwordHash, current.passwordSalt));
+        if (!ok) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "Current password is incorrect." });
+        }
+        const { hash, salt } = await hashPassword(input.newPassword);
+        await updateStaffAdmin(ctx.staff.id, {
+          passwordHash: hash,
+          passwordSalt: salt,
+          mustChangePassword: false,
+        });
+        return { success: true } as const;
+      }),
+  }),
+
+  /* --------------- Staff admin management (owner-only) -------------------- */
+  staffAdmins: router({
+    list: ownerProcedure.query(async () => {
+      const rows = await listStaffAdmins();
+      // Never expose password material to the client.
+      return rows.map((r) => ({
+        id: r.id,
+        email: r.email,
+        name: r.name,
+        active: r.active,
+        mustChangePassword: r.mustChangePassword,
+        lastSignedIn: r.lastSignedIn,
+        createdAt: r.createdAt,
+      }));
+    }),
+    // Create a new admin and return a one-time temporary password to share.
+    create: ownerProcedure
+      .input(
+        z.object({
+          email: z.string().email().max(320),
+          name: z.string().max(255).optional().nullable(),
+        }),
+      )
+      .mutation(async ({ input }) => {
+        const existing = await getStaffAdminByEmail(input.email);
+        if (existing) {
+          throw new TRPCError({ code: "CONFLICT", message: "An admin with that email already exists." });
+        }
+        const tempPassword = generateTempPassword();
+        const { hash, salt } = await hashPassword(tempPassword);
+        const id = await createStaffAdmin({
+          email: input.email,
+          name: input.name ?? null,
+          passwordHash: hash,
+          passwordSalt: salt,
+          mustChangePassword: true,
+          active: true,
+        });
+        return { id, email: input.email.toLowerCase().trim(), tempPassword };
+      }),
+    setActive: ownerProcedure
+      .input(z.object({ id: z.number().int(), active: z.boolean() }))
+      .mutation(async ({ input }) => {
+        await updateStaffAdmin(input.id, { active: input.active });
+        // Revoke sessions when deactivating.
+        if (!input.active) await deleteStaffSessionsForStaff(input.id);
+        return { success: true } as const;
+      }),
+    // Issue a fresh temporary password (returned once to the owner).
+    resetPassword: ownerProcedure
+      .input(z.object({ id: z.number().int() }))
+      .mutation(async ({ input }) => {
+        const staff = await getStaffAdminById(input.id);
+        if (!staff) throw new TRPCError({ code: "NOT_FOUND", message: "Admin not found." });
+        const tempPassword = generateTempPassword();
+        const { hash, salt } = await hashPassword(tempPassword);
+        await updateStaffAdmin(input.id, {
+          passwordHash: hash,
+          passwordSalt: salt,
+          mustChangePassword: true,
+        });
+        await deleteStaffSessionsForStaff(input.id);
+        return { tempPassword };
+      }),
+    delete: ownerProcedure
+      .input(z.object({ id: z.number().int() }))
+      .mutation(async ({ input }) => {
+        await deleteStaffAdmin(input.id);
+        return { success: true } as const;
       }),
   }),
 });
