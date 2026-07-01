@@ -12,6 +12,7 @@ import Applications from "./pages/Applications";
 import Contact from "./pages/Contact";
 import Home from "./pages/Home";
 import Industries from "./pages/Industries";
+import MaritimeApplications from "./pages/MaritimeApplications";
 import Products from "./pages/Products";
 import Services from "./pages/Services";
 
@@ -22,6 +23,7 @@ function PublicSite() {
         <Route path="/" component={Home} />
         <Route path="/products" component={Products} />
         <Route path="/applications" component={Applications} />
+        <Route path="/maritime" component={MaritimeApplications} />
         <Route path="/industries" component={Industries} />
         <Route path="/services" component={Services} />
         <Route path="/about" component={About} />

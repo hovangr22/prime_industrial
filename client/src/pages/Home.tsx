@@ -54,7 +54,7 @@ export default function Home() {
             {/* Sector quick-links */}
             <div className="mt-10 grid max-w-lg grid-cols-2 gap-3">
               <SectorCard
-                href="/industries#maritime"
+                href="/maritime"
                 image={CTA_MARITIME_IMG}
                 icon={<Anchor className="h-5 w-5" />}
                 label={t("home.hero.maritime")}
