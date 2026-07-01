@@ -174,7 +174,7 @@ export const appRouter = router({
 
         // Send email to info@primeindustrial.com (best-effort, non-blocking on failure).
         await sendEmail({
-          to: "info@primeindustrial.com",
+          to: "info@primeindustrial.gr",
           subject: `New Inquiry from ${input.name}${input.company ? ` (${input.company})` : ""}`,
           body: [
             `Sector: ${sectorLabel}`,
