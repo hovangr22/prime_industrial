@@ -71,8 +71,8 @@ const DICT: Dict = {
   // Products
   "products.title": { en: "Belzona Products", el: "Προϊόντα Belzona" },
   "products.subtitle": {
-    en: "Browse our range of Belzona repair composites, protective coatings and elastomer systems. Filter by category to find the right solution.",
-    el: "Περιηγηθείτε στη γκάμα συνθέτων επισκευής, προστατευτικών επιστρώσεων και ελαστομερών Belzona. Φιλτράρετε ανά κατηγορία για να βρείτε τη σωστή λύση.",
+    en: "Browse our range of Belzona repair composites, protective coatings and elastomer systems. Filter by series to find the right solution.",
+    el: "Περιηγηθείτε στη γκάμα συνθέτων επισκευής, προστατευτικών επιστρώσεων και ελαστομερών Belzona. Φιλτράρετε ανά σειρά για να βρείτε τη σωστή λύση.",
   },
   "products.filter.all": { en: "All Products", el: "Όλα τα Προϊόντα" },
   "products.empty": { en: "No products in this category yet.", el: "Δεν υπάρχουν ακόμη προϊόντα σε αυτή την κατηγορία." },
@@ -83,11 +83,13 @@ const DICT: Dict = {
   "products.detail.noDescription": { en: "More information about this product is available on request. Contact our team for a detailed technical data sheet.", el: "Περισσότερες πληροφορίες για αυτό το προϊόν διατίθενται κατόπιν αιτήματος. Επικοινωνήστε με την ομάδα μας για αναλυτικό τεχνικό φυλλάδιο." },
   "products.detail.close": { en: "Close", el: "Κλείσιμο" },
 
-  // Categories
-  "cat.metal-repair": { en: "Metal Repair Composites", el: "Σύνθετα Επισκευής Μετάλλων" },
-  "cat.coatings": { en: "Protective Coatings", el: "Προστατευτικές Επιστρώσεις" },
-  "cat.elastomers": { en: "Elastomers & Rubber", el: "Ελαστομερή & Καουτσούκ" },
-  "cat.specialised": { en: "Specialised Systems", el: "Εξειδικευμένα Συστήματα" },
+  // Categories (Series)
+  "cat.1000 Series": { en: "1000 Series", el: "Σειρά 1000" },
+  "cat.2000 Series": { en: "2000 Series", el: "Σειρά 2000" },
+  "cat.3000 Series": { en: "3000 Series", el: "Σειρά 3000" },
+  "cat.4000 Series": { en: "4000 Series", el: "Σειρά 4000" },
+  "cat.5000 Series": { en: "5000 Series", el: "Σειρά 5000" },
+  "cat.Other Products": { en: "Other Products", el: "Άλλα Προϊόντα" },
 
   // Applications
   "applications.title": { en: "Applications & Solutions", el: "Εφαρμογές & Λύσεις" },

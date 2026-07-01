@@ -7,7 +7,6 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { PRODUCT_CATEGORIES, type ProductCategory } from "@/lib/siteContent";
 import { trpc } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
 import type { inferRouterOutputs } from "@trpc/server";
@@ -17,20 +16,26 @@ import type { AppRouter } from "../../../server/routers";
 
 type ProductRow = inferRouterOutputs<AppRouter>["products"]["list"][number];
 
+const DEFAULT_PLACEHOLDER = "/manus-storage/prod_metal_repair_dba10367.jpg";
+
 export default function Products() {
   const { t, pick } = useLanguage();
-  const [active, setActive] = useState<ProductCategory | "all">("all");
+  const [active, setActive] = useState<string | "all">("all");
   const [selected, setSelected] = useState<ProductRow | null>(null);
   const productsQuery = trpc.products.list.useQuery();
 
   const products = productsQuery.data ?? [];
+  
+  // Extract unique series from products
+  const series = useMemo(
+    () => Array.from(new Set(products.map((p) => p.category))).sort(),
+    [products],
+  );
+
   const filtered = useMemo(
     () => (active === "all" ? products : products.filter((p) => p.category === active)),
     [products, active],
   );
-
-  const categoryImage = (cat: string) =>
-    PRODUCT_CATEGORIES.find((c) => c.key === cat)?.image ?? PRODUCT_CATEGORIES[0].image;
 
   return (
     <div>
@@ -43,9 +48,9 @@ export default function Products() {
             <FilterPill active={active === "all"} onClick={() => setActive("all")}>
               {t("products.filter.all")}
             </FilterPill>
-            {PRODUCT_CATEGORIES.map((c) => (
-              <FilterPill key={c.key} active={active === c.key} onClick={() => setActive(c.key)}>
-                {t(`cat.${c.key}`)}
+            {series.map((s) => (
+              <FilterPill key={s} active={active === s} onClick={() => setActive(s)}>
+                {s}
               </FilterPill>
             ))}
           </div>
@@ -78,14 +83,14 @@ export default function Products() {
                   >
                     <div className="h-48 overflow-hidden bg-secondary">
                       <img
-                        src={p.imageUrl || categoryImage(p.category)}
+                        src={p.imageUrl || DEFAULT_PLACEHOLDER}
                         alt={pick(p.nameEn, p.nameEl)}
                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                     </div>
                     <div className="flex flex-1 flex-col p-5">
                       <span className="inline-flex w-fit rounded-full bg-accent px-2.5 py-0.5 text-xs font-semibold text-accent-foreground">
-                        {t(`cat.${p.category}`)}
+                        {p.category}
                       </span>
                       <h3 className="mt-3 font-display text-lg font-bold uppercase tracking-wide text-navy">
                         {p.code}
@@ -110,7 +115,6 @@ export default function Products() {
       <ProductDetailDialog
         product={selected}
         onClose={() => setSelected(null)}
-        categoryImage={categoryImage}
       />
     </div>
   );
@@ -119,11 +123,9 @@ export default function Products() {
 function ProductDetailDialog({
   product,
   onClose,
-  categoryImage,
 }: {
   product: ProductRow | null;
   onClose: () => void;
-  categoryImage: (cat: string) => string;
 }) {
   const { t, pick } = useLanguage();
 
@@ -135,7 +137,7 @@ function ProductDetailDialog({
             {/* Image */}
             <div className="h-56 overflow-hidden bg-secondary md:h-full">
               <img
-                src={product.imageUrl || categoryImage(product.category)}
+                src={product.imageUrl || DEFAULT_PLACEHOLDER}
                 alt={pick(product.nameEn, product.nameEl)}
                 className="h-full w-full object-cover"
               />
@@ -144,7 +146,7 @@ function ProductDetailDialog({
             {/* Content */}
             <div className="flex flex-col p-6 md:p-8">
               <span className="inline-flex w-fit rounded-full bg-accent px-2.5 py-0.5 text-xs font-semibold text-accent-foreground">
-                {t(`cat.${product.category}`)}
+                {product.category}
               </span>
               <DialogTitle className="mt-3 font-display text-2xl font-bold uppercase tracking-wide text-navy">
                 {product.code}
