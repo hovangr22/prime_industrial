@@ -108,36 +108,26 @@ export default function Home() {
             </Button>
           </div>
           <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {INDUSTRIES.map((ind) => {
-              const industryRoutes: { [key: string]: string } = {
-                maritime: "/maritime",
-                "oil-gas": "/oil-gas",
-                "power-generation": "/power-generation",
-                petrochemical: "/petrochemical",
-              };
-              const href = industryRoutes[ind.slug] || "/industries";
-              // console.log(`Industry: ${ind.slug}, Route: ${href}`);
-              return (
-                <Link
-                  key={ind.slug}
-                  href={href}
-                  className="group relative h-56 overflow-hidden rounded-xl"
-                >
-                  <img
-                    src={ind.image}
-                    alt={pick(ind.titleEn, ind.titleEl)}
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/40 to-transparent" />
-                  <div className="absolute inset-x-0 bottom-0 p-5">
-                    <div className="h-0.5 w-8 rounded-full bg-orange-brand transition-all duration-300 group-hover:w-14" />
-                    <h3 className="mt-2 font-display text-xl font-bold uppercase tracking-wide text-white">
-                      {pick(ind.titleEn, ind.titleEl)}
-                    </h3>
-                  </div>
-                </Link>
-              );
-            })}
+            {INDUSTRIES.map((ind) => (
+              <Link
+                key={ind.slug}
+                href="/industries"
+                className="group relative h-56 overflow-hidden rounded-xl"
+              >
+                <img
+                  src={ind.image}
+                  alt={pick(ind.titleEn, ind.titleEl)}
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/40 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 p-5">
+                  <div className="h-0.5 w-8 rounded-full bg-orange-brand transition-all duration-300 group-hover:w-14" />
+                  <h3 className="mt-2 font-display text-xl font-bold uppercase tracking-wide text-white">
+                    {pick(ind.titleEn, ind.titleEl)}
+                  </h3>
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
