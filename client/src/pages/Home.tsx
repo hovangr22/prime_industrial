@@ -49,25 +49,7 @@ export default function Home() {
             <p className="mt-6 max-w-2xl text-base leading-relaxed text-white/80 lg:text-lg">
               {t("home.hero.subtitle")}
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Button
-                asChild
-                size="lg"
-                className="bg-orange-brand text-orange-brand-foreground hover:bg-orange-brand/90"
-              >
-                <Link href="/contact">
-                  {t("cta.getQuote")} <ArrowRight className="ml-1.5 h-4 w-4" />
-                </Link>
-              </Button>
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className="border-white/30 bg-white/5 text-white hover:bg-white/15 hover:text-white"
-              >
-                <Link href="/products">{t("nav.products")}</Link>
-              </Button>
-            </div>
+
 
             {/* Sector quick-links */}
             <div className="mt-10 grid max-w-lg grid-cols-2 gap-3">
