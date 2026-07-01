@@ -41,15 +41,45 @@ export default function Industries() {
                 <p className="mt-4 text-base leading-relaxed text-muted-foreground">
                   {pick(ind.bodyEn, ind.bodyEl)}
                 </p>
-                <Button
-                  asChild
-                  variant="outline"
-                  className="mt-6 border-navy/20 text-navy hover:bg-navy hover:text-white"
-                >
-                  <Link href="/contact">
-                    {t("cta.getQuote")} <ArrowRight className="ml-1.5 h-4 w-4" />
-                  </Link>
-                </Button>
+                <div className="mt-6 flex gap-3">
+                  {ind.slug === "maritime" && (
+                    <Button asChild variant="default" className="bg-orange-brand text-orange-brand-foreground hover:bg-orange-brand/90">
+                      <Link href="/maritime">
+                        View Applications <ArrowRight className="ml-1.5 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  )}
+                  {ind.slug === "oil-gas" && (
+                    <Button asChild variant="default" className="bg-orange-brand text-orange-brand-foreground hover:bg-orange-brand/90">
+                      <Link href="/oil-gas">
+                        View Applications <ArrowRight className="ml-1.5 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  )}
+                  {ind.slug === "power-generation" && (
+                    <Button asChild variant="default" className="bg-orange-brand text-orange-brand-foreground hover:bg-orange-brand/90">
+                      <Link href="/power-generation">
+                        View Applications <ArrowRight className="ml-1.5 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  )}
+                  {ind.slug === "petrochemical" && (
+                    <Button asChild variant="default" className="bg-orange-brand text-orange-brand-foreground hover:bg-orange-brand/90">
+                      <Link href="/petrochemical">
+                        View Applications <ArrowRight className="ml-1.5 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  )}
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="border-navy/20 text-navy hover:bg-navy hover:text-white"
+                  >
+                    <Link href="/contact">
+                      {t("cta.getQuote")} <ArrowRight className="ml-1.5 h-4 w-4" />
+                    </Link>
+                  </Button>
+                </div>
               </div>
             </article>
           ))}
