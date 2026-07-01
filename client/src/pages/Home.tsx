@@ -111,11 +111,12 @@ export default function Home() {
             {INDUSTRIES.map((ind) => {
               const industryRoutes: { [key: string]: string } = {
                 maritime: "/maritime",
-                oil: "/oil-gas",
-                power: "/power-generation",
+                "oil-gas": "/oil-gas",
+                "power-generation": "/power-generation",
                 petrochemical: "/petrochemical",
               };
               const href = industryRoutes[ind.slug] || "/industries";
+              // console.log(`Industry: ${ind.slug}, Route: ${href}`);
               return (
                 <Link
                   key={ind.slug}
