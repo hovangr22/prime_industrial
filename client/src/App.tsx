@@ -16,6 +16,7 @@ import MaritimeApplications from "./pages/MaritimeApplications";
 import OilGasApplications from "./pages/OilGasApplications";
 import PowerGenerationApplications from "./pages/PowerGenerationApplications";
 import PetrochemicalApplications from "./pages/PetrochemicalApplications";
+import BuildingStructuresApplications from "./pages/BuildingStructuresApplications";
 import Products from "./pages/Products";
 import Services from "./pages/Services";
 
@@ -30,6 +31,7 @@ function PublicSite() {
         <Route path="/oil-gas" component={OilGasApplications} />
         <Route path="/power-generation" component={PowerGenerationApplications} />
         <Route path="/petrochemical" component={PetrochemicalApplications} />
+        <Route path="/building-structures" component={BuildingStructuresApplications} />
         <Route path="/industries" component={Industries} />
         <Route path="/services" component={Services} />
         <Route path="/about" component={About} />

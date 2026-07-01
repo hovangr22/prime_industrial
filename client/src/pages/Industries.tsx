@@ -70,6 +70,13 @@ export default function Industries() {
                       </Link>
                     </Button>
                   )}
+                  {ind.slug === "buildings-structures" && (
+                    <Button asChild variant="default" className="bg-orange-brand text-orange-brand-foreground hover:bg-orange-brand/90">
+                      <Link href="/building-structures">
+                        View Applications <ArrowRight className="ml-1.5 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  )}
                   <Button
                     asChild
                     variant="outline"
