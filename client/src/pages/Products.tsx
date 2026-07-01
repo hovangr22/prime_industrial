@@ -26,14 +26,29 @@ export default function Products() {
 
   const products = productsQuery.data ?? [];
   
-  // Extract unique series from products
+  // Extract unique series from products (sorted numerically)
   const series = useMemo(
-    () => Array.from(new Set(products.map((p) => p.category))).sort(),
+    () => {
+      const unique = Array.from(new Set(products.map((p) => p.category)));
+      return unique.sort((a, b) => {
+        // Extract numeric part from category (e.g., "1000 Series" -> 1000)
+        const aNum = parseInt(a.match(/\d+/)?.[0] || "999999");
+        const bNum = parseInt(b.match(/\d+/)?.[0] || "999999");
+        return aNum - bNum;
+      });
+    },
     [products],
   );
 
   const filtered = useMemo(
-    () => (active === "all" ? products : products.filter((p) => p.category === active)),
+    () => {
+      const filtered = active === "all" ? products : products.filter((p) => p.category === active);
+      return filtered.sort((a, b) => {
+        const aNum = parseInt(a.code.match(/\d+/)?.[0] || "0");
+        const bNum = parseInt(b.code.match(/\d+/)?.[0] || "0");
+        return aNum - bNum;
+      });
+    },
     [products, active],
   );
 
