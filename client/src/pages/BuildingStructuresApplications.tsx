@@ -133,12 +133,13 @@ export default function BuildingStructuresApplications() {
                   </p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     {app.products.map((prod) => (
-                      <span
+                      <Link
                         key={prod}
-                        className="inline-block rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-navy"
+                        href={`/products?product=${encodeURIComponent(prod)}`}
+                        className="inline-block rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-navy transition-colors duration-150 hover:bg-navy hover:text-white active:scale-[0.97]"
                       >
                         Belzona {prod}
-                      </span>
+                      </Link>
                     ))}
                   </div>
                   <Button

@@ -11,7 +11,8 @@ import { trpc } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
 import type { inferRouterOutputs } from "@trpc/server";
 import { ArrowRight, PackageSearch } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearch } from "wouter";
 import type { AppRouter } from "../../../server/routers";
 
 type ProductRow = inferRouterOutputs<AppRouter>["products"]["list"][number];
@@ -20,11 +21,30 @@ const DEFAULT_PLACEHOLDER = "/manus-storage/prod_metal_repair_dba10367.jpg";
 
 export default function Products() {
   const { t, pick } = useLanguage();
+  const searchString = useSearch();
   const [active, setActive] = useState<string | "all">("all");
   const [selected, setSelected] = useState<ProductRow | null>(null);
   const productsQuery = trpc.products.list.useQuery();
 
   const products = productsQuery.data ?? [];
+
+  // Normalize a product code for matching (strip "Belzona", spaces, case)
+  const normalizeCode = (value: string) =>
+    value.toLowerCase().replace(/belzona/g, "").replace(/[^a-z0-9]/g, "").trim();
+
+  // Open a product dialog automatically when navigated with ?product=CODE
+  useEffect(() => {
+    const params = new URLSearchParams(searchString);
+    const requested = params.get("product");
+    if (!requested || products.length === 0) return;
+    const target = normalizeCode(requested);
+    const match = products.find((p) => normalizeCode(p.code) === target);
+    if (match) {
+      setSelected(match);
+      setActive(match.category);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchString, products]);
   
   // Extract unique series from products (sorted numerically)
   const series = useMemo(
