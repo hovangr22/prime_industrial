@@ -11,6 +11,14 @@ import { trpc } from "@/lib/trpc";
 import { Anchor, ArrowRight, Factory, Headset, ShieldCheck, Wrench } from "lucide-react";
 import { Link } from "wouter";
 
+const INDUSTRY_ROUTES: Record<string, string> = {
+  "oil-gas": "/oil-gas",
+  "maritime": "/maritime",
+  "power-generation": "/power-generation",
+  "petrochemical": "/petrochemical",
+  "buildings-structures": "/building-structures",
+};
+
 export default function Home() {
   const { t, pick } = useLanguage();
   const appsQuery = trpc.applications.list.useQuery();
@@ -111,7 +119,7 @@ export default function Home() {
             {INDUSTRIES.map((ind) => (
               <Link
                 key={ind.slug}
-                href="/industries"
+                href={INDUSTRY_ROUTES[ind.slug] ?? "/industries"}
                 className="group relative h-56 overflow-hidden rounded-xl"
               >
                 <img
